@@ -20,7 +20,8 @@ df_clean = df[df.Koordinate1 != 0.00]
 
 #convert to lat/lon and int
 # 32, U is west germany
-print(df_clean['Koordinate1'].astype(int))
+print(df_clean['Koordinate1'].astype(int).min())
+print(df_clean['Koordinate1'].astype(int).max())
 df_clean.apply(utm.to_latlon(df_clean['Koordinate1'].astype(int), df_clean['Koordinate2'].astype(int), 32, 'U'))
 
 # find the map boundaries
