@@ -4,6 +4,8 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import utm
 import re
+import folium
+import folium.plugins
 
 #read the data
 df = pd.read_csv('data/uebersichtslisteBombenfunde2017.csv', sep=';')
@@ -17,6 +19,9 @@ for col in ['easting', 'northing']:
     
 #clean zeroes in diffrent df
 df_clean = df[df.easting != 0.00]
+
+#clean nan
+df_clean = df_clean.replace(np.nan, 'unbekannt', regex=True)
 
 #fix wrong coordinates (too long, wrong decimal point probably)
 df_clean['easting'] = df_clean['easting'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
@@ -35,14 +40,10 @@ debug = False
 # debug prints, max and mins
 if (debug == True):
     print('min, max easting')
-    print(df_clean['easting'].astype(int).min())
     print(df_clean['easting'].min())
-    print(df_clean['easting'].astype(int).max())
     print(df_clean['easting'].max())
     print('min, max northing')
-    print(df_clean['northing'].astype(int).min())
     print(df_clean['northing'].min())
-    print(df_clean['northing'].astype(int).max())
     print(df_clean['northing'].max())
 
 #convert to lat/lon and int
@@ -55,13 +56,26 @@ df_clean['(lat,lon) WGS84'] = latlon_list
 
 df_clean['lat WGS84'], df_clean['lon WGS84'] = zip(*df_clean['(lat,lon) WGS84'])
 
-# find the map boundaries
-BBox = (df_clean['lon WGS84'].min(), df_clean['lon WGS84'].max(),
-            df_clean['lat WGS84'].min(), df_clean['lat WGS84'].max())
-print(BBox)
+#print(df_clean)
+
+# find the map center
+lon_center = (df_clean['lon WGS84'].min()+df_clean['lon WGS84'].max())/2
+lat_center = (df_clean['lat WGS84'].min()+df_clean['lat WGS84'].max())/2
 
 # load map
-df_map = gpd.read_file('data/shapefile/gis_osm_places_free_1.shp')
-print(type(df_map))
-df_map.head()
-print(df_map())
+map = folium.Map(location = [lat_center,lon_center],
+                    tiles='openstreetmap',
+                    zoom_start = 9)
+
+#merge bombdata
+df_clean['bombdata'] =  'Herkunft: ' + df_clean['Herkunft'] + ', Gewicht: ' + df_clean['Gewicht'].astype(str) + ', Bombentyp: ' + df_clean['Bombentyp']
+print(df_clean['bombdata'])
+
+
+# add markers
+for idx, row in df_clean.iterrows():
+    folium.Marker(location = [row['lat WGS84'], row['lon WGS84']], popup=row['Herkunft']).add_to(map)
+
+# add buffers/exlosive radii
+
+map.save("map.html")
