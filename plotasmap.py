@@ -19,7 +19,7 @@ for col in ['Latitude', 'Longitude']:
 df_clean = df[df.Latitude != 0.00]
 
 #fix wrong coordinates (too long, wrong decimal point probably)
-df_clean['Koordinate1'] = df_clean['Latitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
+df_clean['Latitude'] = df_clean['Latitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
 df_clean['Longitude'] = df_clean['Longitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
 # twice, because at least one coordinate seems to be wrong by 2 decimal points
 df_clean['Longitude'] = df_clean['Longitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
@@ -27,12 +27,12 @@ df_clean['Longitude'] = df_clean['Longitude'].apply(lambda x: round(x/10,2) if (
 debug = False
 # debug prints, max and mins
 if (debug == True):
-    print('min, max Koordinate 1')
+    print('min, max Latitude')
     print(df_clean['Latitude'].astype(int).min())
     print(df_clean['Latitude'].min())
     print(df_clean['Latitude'].astype(int).max())
     print(df_clean['Latitude'].max())
-    print('min, max Koordinate 2')
+    print('min, max Longitude')
     print(df_clean['Longitude'].astype(int).min())
     print(df_clean['Longitude'].min())
     print(df_clean['Longitude'].astype(int).max())
@@ -49,10 +49,6 @@ print(column_latlon)
 
 print(df_clean)
 
-templist = list(map(utm.to_latlon(column_latlon[0], column_latlon[1], 32, "U")))
-print(templist)
-#print('Latitude, Longitude (as (lat, long) tuple):')
-#print(df_clean['Latitude, Longitude (as (lat, long) tuple)'])
 
 # find the map boundaries
 #BBox = (df_clean.Latitude.min(), df_clean.Latitude.max(),
