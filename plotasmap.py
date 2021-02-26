@@ -7,26 +7,56 @@ import re
 
 #read the data
 df = pd.read_csv('data/uebersichtslisteBombenfunde2017.csv', sep=';')
-df.head()
-#print(df)
+
+# rename Koordinate1 and Koordinate2 to match what they are:
+df.rename(columns = {'Koordinate1': 'Latitude', 'Koordinate2': 'Longitude'}, inplace=True)
 
 #rewrite with . instead of ,
-for col in ['Koordinate1', 'Koordinate2']:
+for col in ['Latitude', 'Longitude']:
     df[col] = pd.to_numeric(df[col].apply(lambda x: re.sub(',' , '.', str(x))))
-#print(df)
-
+    
 #clean zeroes in diffrent df
-df_clean = df[df.Koordinate1 != 0.00]
+df_clean = df[df.Latitude != 0.00]
+
+#fix wrong coordinates (too long, wrong decimal point probably)
+df_clean['Koordinate1'] = df_clean['Latitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
+df_clean['Longitude'] = df_clean['Longitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
+# twice, because at least one coordinate seems to be wrong by 2 decimal points
+df_clean['Longitude'] = df_clean['Longitude'].apply(lambda x: round(x/10,2) if (x >= 1000000) else x)
+
+debug = False
+# debug prints, max and mins
+if (debug == True):
+    print('min, max Koordinate 1')
+    print(df_clean['Latitude'].astype(int).min())
+    print(df_clean['Latitude'].min())
+    print(df_clean['Latitude'].astype(int).max())
+    print(df_clean['Latitude'].max())
+    print('min, max Koordinate 2')
+    print(df_clean['Longitude'].astype(int).min())
+    print(df_clean['Longitude'].min())
+    print(df_clean['Longitude'].astype(int).max())
+    print(df_clean['Longitude'].max())
+
+# create a new column:
+df_clean['Latitude, Longitude (as UTM)'] = list(zip(df_clean['Latitude'], df_clean['Longitude']))
+column_latlon = df_clean['Latitude, Longitude (as UTM)']
+print('Latitude, Longitude (as UTM): ')
+print(column_latlon)
 
 #convert to lat/lon and int
 # 32, U is west germany
-print(df_clean['Koordinate1'].astype(int).min())
-print(df_clean['Koordinate1'].astype(int).max())
-df_clean.apply(utm.to_latlon(df_clean['Koordinate1'].astype(int), df_clean['Koordinate2'].astype(int), 32, 'U'))
+
+print(df_clean)
+
+templist = list(map(utm.to_latlon(column_latlon[0], column_latlon[1], 32, "U")))
+print(templist)
+#print('Latitude, Longitude (as (lat, long) tuple):')
+#print(df_clean['Latitude, Longitude (as (lat, long) tuple)'])
 
 # find the map boundaries
-BBox = (df_clean.Koordinate1.min(), df_clean.Koordinate1.max(),
-            df_clean.Koordinate2.min(), df_clean.Koordinate2.max())
+#BBox = (df_clean.Latitude.min(), df_clean.Latitude.max(),
+#            df_clean.Longitude.min(), df_clean.Longitude.max())
 
 # load map
-bomb_map = plt.imread('data/map.png')
+#bomb_map = plt.imread('data/map.png')
