@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import utm
 import re
@@ -60,3 +61,7 @@ BBox = (df_clean['lon WGS84'].min(), df_clean['lon WGS84'].max(),
 print(BBox)
 
 # load map
+df_map = gpd.read_file('data/shapefile/gis_osm_places_free_1.shp')
+print(type(df_map))
+df_map.head()
+print(df_map())
