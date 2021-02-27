@@ -69,13 +69,43 @@ map = folium.Map(location = [lat_center,lon_center],
 
 #merge bombdata
 df_clean['bombdata'] =  'Herkunft: ' + df_clean['Herkunft'] + ', Gewicht: ' + df_clean['Gewicht'].astype(str) + ', Bombentyp: ' + df_clean['Bombentyp']
-print(df_clean['bombdata'])
 
+#destruction radius list
+radius_list=[('unbestimmt',0),('50 kg', 26), ('125 kg', 33), ('250 kg', 45), ('500 kg', 56)]
+
+#evacuation radius list
+evac_list=[('unbestimmt',200),('50 kg', 250), ('125 kg', 500), ('250 kg', 1000), ('500 kg', 1500)]
 
 # add markers
 for idx, row in df_clean.iterrows():
-    folium.Marker(location = [row['lat WGS84'], row['lon WGS84']], popup=row['Herkunft']).add_to(map)
+    popup = folium.Popup(row['bombdata'], max_width=450,min_width=100)
+    folium.Marker(location = [row['lat WGS84'], row['lon WGS84']], 
+                                popup=popup,
+                                icon=folium.Icon(color='black', icon= 'bomb', prefix='fa')).add_to(map)
+    for index in range(len(radius_list)):
+        if (row['Gewicht'] == radius_list[index][0]):
+            r_dest = radius_list[index][1]
 
-# add buffers/exlosive radii
+    for index in range(len(evac_list)):
+        if (row['Gewicht'] == evac_list[index][0]):
+            r_evac = evac_list[index][1]
+    # visible damage circle
+    folium.Circle(location = [row['lat WGS84'], row['lon WGS84']],
+                                radius=r_dest,
+                                color='red',
+                                fill = True,
+                                fill_color = 'red',
+                                fill_opacity= 0.01*r_dest,
+                                tooltip='Radius des sichtbaren Schadens').add_to(map)
+    # evacuation circle
+    folium.Circle(location = [row['lat WGS84'], row['lon WGS84']],
+                                radius=r_evac,
+                                color='lightgreen',
+                                fill = True,
+                                fill_color = 'lightgreen',
+                                fill_opacity= 0.01*r_dest,
+                                tooltip='Evakuierungsradius').add_to(map)
 
+
+#save map as html
 map.save("map.html")
